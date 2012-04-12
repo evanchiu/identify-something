@@ -8,7 +8,7 @@ import sys
 import itertools
 import commands
 
-class Drawsome:
+class Identifier:
     def __init__(self, filename = None):
         
         # load file if given
@@ -22,15 +22,22 @@ class Drawsome:
             lines = f.readlines()
 
         # First line is the length of the word
-        self.length = int(lines[0].strip())
+        length = int(lines[0].strip())
+
+        # initialize with the rest of the lines
+        self.init(length, lines[1:])
+
+    def init(self, length, lines):
+        self.length = length
 
         # Start with the second line
-        self.letters = list(lines[1].strip())
+        letters = list(lines[0].strip())
 
         # Look through other lines for unpotential letters
-        for line in lines[2:]:
-            # Find unpotential by removing letters from the other line
-            unpotential = list(self.letters[:])
+        for line in lines[1:]:
+            # If a letter appears in letters, but not in the other line
+            # it is cannot be part of the solution, i.e. unpotential
+            unpotential = list(letters[:])
             for other_letter in line:
                 try:
                     unpotential.remove(other_letter)
@@ -40,12 +47,13 @@ class Drawsome:
             # Remove unpotential letters
             for bad in unpotential:
                 try:
-                    self.letters.remove(bad)
+                    letters.remove(bad)
                 except:
                     pass
 
-        self.letters = ''.join(self.letters)
-        print self.length, self.letters
+        # Sort the letters and recombine to a single string
+        letters.sort()
+        self.letters = ''.join(letters)
 
     # Search through all permutations 
     def search(self):
@@ -63,7 +71,8 @@ if __name__ == '__main__':
         print 'usage: %s <filename>' % sys.argv[0]
         exit(1)
 
-    ds = Drawsome(filename)
+    ds = Identifier(filename)
+    print ds.length, ds.letters
     ds.search()
 
 
