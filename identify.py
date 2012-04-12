@@ -6,17 +6,18 @@
 
 import sys
 import itertools
-import commands
 
 class Identifier:
+    """A class for parsing input and searching through a Dictionary"""
     def __init__(self, filename = None):
-        
-        # load file if given
+        """Initializes with optional filename"""
         if filename != None:
             self.load(filename)
 
     def load(self, filename):
-        
+        """Loads data from file
+        The file must have the number of letters as the first line
+        Followed by any number of given letter strings"""
         # read file
         with open(filename) as f:
             lines = f.readlines()
@@ -28,9 +29,10 @@ class Identifier:
         self.init(length, lines[1:])
 
     def init(self, length, lines):
+        """Sets up the state given the length and the given letter strings"""
         self.length = length
 
-        # Start with the second line
+        # Start with the first line
         letters = list(lines[0].strip())
 
         # Look through other lines for unpotential letters
@@ -56,13 +58,42 @@ class Identifier:
         self.letters = ''.join(letters)
 
     # Search through all permutations 
-    def search(self):
+    def search(self, dictionary):
+        """Search through dictionary for any permutation of the letters"""
         for perm in itertools.permutations(self.letters, self.length):
             word = ''.join(perm)
-            dictionary = '/usr/share/dict/words.pre-dictionaries-common'
-            output = commands.getoutput('grep "^%s$" %s' % (word, dictionary))
-            if len(output) > 0:
-                print output
+            result = dictionary.check(word)
+            if result != None:
+                print result
+
+
+class Dictionary:
+    """A class to maintain state looking through a dictionary wordlist file
+    for calling check on lexicographically ordered strings"""
+    
+    def __init__(self, length, filename):
+        """Initializes to give back words from filename of a given length"""
+        self.length = length
+        self.handle = open(filename)
+        self.next()
+
+    def next(self):
+        """Jump to the next word in the dictionary of correct length"""
+        self.word = self.handle.readline().strip()
+        while len(self.word) != self.length:
+            self.word = self.handle.readline().strip()
+
+    def check(self, word):
+        """check if word is in the dictionary, note words must be checked in
+        alphabetical order. Returns the word if it exists or None if not"""
+        while 1:
+            if word == self.word:
+                return word
+            if self.word < word:
+                self.next()
+            else:
+                return None
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
@@ -71,8 +102,9 @@ if __name__ == '__main__':
         print 'usage: %s <filename>' % sys.argv[0]
         exit(1)
 
-    ds = Identifier(filename)
-    print ds.length, ds.letters
-    ds.search()
+    identifier = Identifier(filename)
+    dictionaryFile = '/usr/share/dict/words.pre-dictionaries-common'
+    dictionary = Dictionary(identifier.length, dictionaryFile)
+    identifier.search(dictionary)
 
 
